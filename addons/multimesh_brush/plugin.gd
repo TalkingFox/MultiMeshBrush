@@ -1,24 +1,28 @@
 tool
 extends EditorPlugin
 
-const Util = preload("utilities.gd")
-var debug_show_collider:bool = false
-var ui_sidebar
-var ui_activate_button
-var brush_cursor
-var edit_mode:bool setget _set_edit_mode
+const Util = preload("utilities.gd");
+var ui_sidebar;
+var ui_activate_button;
+var brush_cursor;
+
 var current_tool = "_paint_tool"
-var process_drawing:bool = false
-var brush_size:float = 1
-var calculated_size:float = 1.0
-var brush_density:float = 1.0;
+var process_drawing: bool = false
+var brush_size: float = 1
+var brush_density: float = 1.0;
 
 var current_multimesh: MultiMeshInstance
-var editable_object:bool = false
+var is_selection_editable: bool = false
 
-var raycast_hit:bool = false
-var hit_position: Vector3
-var hit_normal
+var is_edit_mode: bool setget _set_edit_mode;
+func _set_edit_mode(value) -> void:
+    is_edit_mode = value;
+    if !is_edit_mode:
+        ui_sidebar.hide();
+
+var is_cursor_raycast_hit: bool = false
+var hit_position: Vector3;
+var hit_normal: Vector3;
 
 export(Vector2) var blade_width = Vector2(0.1, 0.2);
 export(Vector2) var blade_height = Vector2(1, 1.5);
@@ -26,16 +30,16 @@ export(Vector2) var sway_yaw = Vector2(0.0, 10.0);
 export(Vector2) var sway_pitch = Vector2(0.0, 10.0);
 
 func handles(obj) -> bool:
-    return editable_object;
+    return is_selection_editable;
 
 func forward_spatial_gui_input(camera, event) -> bool:
-    if !edit_mode:
-        return false
-
+    if !is_edit_mode:
+        return false;
+        
     _display_brush()
     _raycast(camera, event)
 
-    if raycast_hit:
+    if is_cursor_raycast_hit:
         return _user_input(event) #the returned value blocks or unblocks the default input from godot
     else:
         return false
@@ -50,7 +54,6 @@ func _user_input(event) -> bool:
         return true
     else:
         process_drawing = false
-        _set_collision()
         return false
 
 func _process_drawing():
@@ -63,7 +66,7 @@ func _process_drawing():
         yield(get_tree().create_timer(1.0), "timeout")
 
 func _display_brush() -> void:    
-    if raycast_hit:
+    if is_cursor_raycast_hit:
         brush_cursor.visible = true
         brush_cursor.translation = hit_position        
         (brush_cursor.mesh as SphereMesh).radius = brush_size;
@@ -79,11 +82,12 @@ func _raycast(camera:Camera, event:InputEvent) -> void:
 
         var space_state =  get_viewport().world.direct_space_state
         var hit = space_state.intersect_ray(ray_origin, ray_origin + ray_dir * ray_distance, [])
+        
         #IF RAYCAST HITS A DRAWABLE SURFACE:
         if !hit:
             return
         if hit:
-            raycast_hit = true
+            is_cursor_raycast_hit = true
             hit_position = hit.position
             hit_normal = hit.normal
 
@@ -110,9 +114,10 @@ func _paint_tool() -> void:
     
     multimesh.instance_count += instances_to_create;
     
+    var new_starting_index = prior_transforms.size();
     # add new instances
     for i in instances_to_create:
-        var mesh_index = multimesh.instance_count - (i + 1);
+        var mesh_index = new_starting_index + i;
         var position = Util.rand_point_inside_circle(cursor_position, cursor_radius);
         var basis = Basis(Vector3.UP, deg2rad(rand_range(0,359)));
         multimesh.set_instance_transform(mesh_index, Transform(basis, position));
@@ -121,10 +126,10 @@ func _paint_tool() -> void:
             rand_range(blade_height.x, blade_height.y),
             deg2rad(rand_range(sway_pitch.x, sway_pitch.y)),
             deg2rad(rand_range(sway_yaw.x, sway_yaw.y))
-         ));        
+         ));
     
     # reset old instances
-    for i in prior_transforms.size()-1:
+    for i in prior_transforms.size():
         multimesh.set_instance_transform(i, prior_transforms[i]);
         multimesh.set_instance_custom_data(i, Color(
           rand_range(blade_width.x, blade_width.y),
@@ -162,71 +167,23 @@ func _erase_tool() -> void:
           deg2rad(rand_range(sway_yaw.x, sway_yaw.y)))
         );
 
-func _set_collision() -> void:
-    print('set_collision');
-    # var temp_collision:StaticBody = current_multimesh.get_node_or_null(current_multimesh.name + "_col")
-    # if (temp_collision == null):        
-        # current_multimesh.create_trimesh_collision()
-        # temp_collision = current_multimesh.get_node(current_multimesh.name + "_col")
-        # temp_collision.set_collision_layer(524288)
-        # temp_collision.set_collision_mask(524288)
-    # else:
-    # 	temp_collision.free()
-    # 	current_multimesh.create_trimesh_collision()
-    # 	temp_collision = current_multimesh.get_node(current_multimesh.name + "_col")
-    # 	temp_collision.set_collision_layer(524288)
-    # 	temp_collision.set_collision_mask(524288)
-    
-    # if !debug_show_collider:
-    # 	temp_collision.hide()
-
-func _delete_collision() -> void:
-    print('delete_collision');
-    # var temp_collision:StaticBody = current_multimesh.get_node_or_null(current_multimesh.name + "_col")
-    # if (temp_collision != null):
-    #     temp_collision.free()
-
-func _set_edit_mode(value) -> void:
-    print('Edit mode: ' + String(value));
-    edit_mode = value
-    if !current_multimesh:
-        return
-        if (!current_multimesh.mesh):
-            return
-
-    if edit_mode:
-        _set_collision()
-    else:
-        ui_sidebar.hide()
-        _delete_collision()
-
-func _make_local_copy() -> void:
-    print('make_local_copy');
-    # current_multimesh.mesh = current_multimesh.mesh.duplicate(false)
-
 func _change_tool(selected_tool: String) -> void:
-    print(selected_tool);
     current_tool = selected_tool;
 
 func _selection_changed() -> void:
-    print('selection_changed');
     ui_activate_button._set_ui_sidebar(false)
-
     var selection = get_editor_interface().get_selection().get_selected_nodes()
-    print('selection size' + String(selection.size()));
     if selection.size() == 1 and selection[0] is MultiMeshInstance:
-        print('selection was multimesh instance');
         current_multimesh = selection[0]
         if current_multimesh.multimesh == null:
             ui_activate_button._set_ui_sidebar(false)
             ui_activate_button._hide()
-            editable_object = false
+            is_selection_editable = false
         else:
-            print('selection was not multimesh instance');
             ui_activate_button._show()
-            editable_object = true
+            is_selection_editable = true
     else:
-        editable_object = false
+        is_selection_editable = false
         ui_activate_button._set_ui_sidebar(false) #HIDE THE SIDEBAR
         ui_activate_button._hide()
 
@@ -237,14 +194,18 @@ func _enter_tree() -> void:
     add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_SIDE_LEFT, ui_sidebar)
     ui_sidebar.hide()
     ui_sidebar.painter = self
+    ui_sidebar._toggle_paint_tool(true);
+    
     #SETUP THE EDITOR BUTTON:
     ui_activate_button = preload("res://addons/multimesh_brush/scenes/activate_button.tscn").instance()
     add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU, ui_activate_button)
     ui_activate_button.hide()
     ui_activate_button.painter = self
     ui_activate_button.ui_sidebar = ui_sidebar
+    
     #SELECTION SIGNAL:
     get_editor_interface().get_selection().connect("selection_changed", self, "_selection_changed")
+    
     #LOAD BRUSH:
     brush_cursor = preload("res://addons/multimesh_brush/scenes/brush_cursor.tscn").instance()
     brush_cursor.visible = false
@@ -255,6 +216,7 @@ func _exit_tree() -> void:
     remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_SIDE_LEFT, ui_sidebar)
     if ui_sidebar:
         ui_sidebar.free()
+    
     #REMOVE THE EDITOR BUTTON:
     remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU, ui_activate_button)
     if ui_activate_button:

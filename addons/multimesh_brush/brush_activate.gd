@@ -28,11 +28,11 @@ func _hide():
 func _set_ui_sidebar(value):
     if value:
         ui_sidebar.set_process_input(true)
-        painter._set_edit_mode(true)
+        painter.is_edit_mode = true;
         ui_sidebar.show()
         painter.brush_cursor.visible = true
     else:
         ui_sidebar.set_process_input(false)
         ui_sidebar.hide()
-        painter._set_edit_mode(false)
+        painter.is_edit_mode = false;
         painter.brush_cursor.visible = false
