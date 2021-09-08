@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/multimesh_brush/brush_activate.gd" type="Script" id=1]
+
+[node name="activate_button" type="Control"]
+margin_right = 40.0
+margin_bottom = 40.0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+button_path = NodePath("activate")
+
+[node name="activate" type="Button" parent="."]
+margin_right = 64.0
+margin_bottom = 20.0
+toggle_mode = true
+text = "Enable Brush"
+__meta__ = {
+"_edit_use_anchors_": false
+}

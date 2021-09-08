@@ -1,0 +1,112 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://addons/multimesh_brush/brush_ui.gd" type="Script" id=1]
+[ext_resource path="res://addons/multimesh_brush/icons/paint-brush.svg" type="Texture" id=2]
+
+[node name="ui" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -768.0
+margin_bottom = -600.0
+rect_min_size = Vector2( 256, 256 )
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+button_paint_dir = NodePath("MainArea/Tools_1/BtnBrush")
+brush_size_slider_dir = NodePath("MainArea/Sliders/GridContainer/radius")
+brush_size_label_dir = NodePath("MainArea/Sliders/GridContainer/radius_value")
+brush_density_slider_dir = NodePath("MainArea/Sliders/GridContainer/density")
+brush_density_label_dir = NodePath("MainArea/Sliders/GridContainer/density_value")
+
+[node name="MainArea" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+rect_min_size = Vector2( 256, 324 )
+size_flags_horizontal = 0
+size_flags_vertical = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Tools_1" type="HBoxContainer" parent="MainArea"]
+margin_right = 256.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 0, 64 )
+alignment = 1
+
+[node name="BtnBrush" type="ToolButton" parent="MainArea/Tools_1"]
+margin_left = 106.0
+margin_right = 150.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 32, 32 )
+hint_tooltip = "Paint multimeshinstances by left clicking on the mesh."
+toggle_mode = true
+pressed = true
+icon = ExtResource( 2 )
+
+[node name="Sliders" type="VBoxContainer" parent="MainArea"]
+margin_top = 68.0
+margin_right = 256.0
+margin_bottom = 324.0
+rect_min_size = Vector2( 128, 256 )
+size_flags_vertical = 0
+custom_constants/separation = 0
+
+[node name="GridContainer" type="GridContainer" parent="MainArea/Sliders"]
+margin_right = 256.0
+margin_bottom = 68.0
+rect_min_size = Vector2( 256, 0 )
+columns = 3
+
+[node name="label_radius" type="Label" parent="MainArea/Sliders/GridContainer"]
+margin_right = 43.0
+margin_bottom = 14.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "radius:"
+
+[node name="radius" type="HSlider" parent="MainArea/Sliders/GridContainer"]
+margin_left = 59.0
+margin_right = 187.0
+margin_bottom = 16.0
+rect_min_size = Vector2( 128, 0 )
+min_value = 0.1
+max_value = 10.0
+step = 0.1
+value = 1.0
+
+[node name="radius_value" type="Label" parent="MainArea/Sliders/GridContainer"]
+margin_left = 191.0
+margin_top = 1.0
+margin_right = 199.0
+margin_bottom = 15.0
+text = "1"
+
+[node name="label_density" type="Label" parent="MainArea/Sliders/GridContainer"]
+margin_top = 20.0
+margin_right = 55.0
+margin_bottom = 34.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "density: "
+valign = 1
+
+[node name="density" type="HSlider" parent="MainArea/Sliders/GridContainer"]
+margin_left = 59.0
+margin_top = 20.0
+margin_right = 187.0
+margin_bottom = 36.0
+rect_min_size = Vector2( 128, 0 )
+min_value = 0.01
+max_value = 1000.0
+value = 5.0
+
+[node name="density_value" type="Label" parent="MainArea/Sliders/GridContainer"]
+margin_left = 191.0
+margin_top = 20.0
+margin_right = 199.0
+margin_bottom = 68.0
+text = "5
+
+"
