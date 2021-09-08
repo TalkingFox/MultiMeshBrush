@@ -1,10 +1,15 @@
 tool
 extends Control
 
+signal tool_changed;
+
 var painter
 
 export var button_paint_dir:NodePath
-var button_paint:ToolButton
+var button_paint: ToolButton
+
+export var button_eraser_dir:NodePath
+var button_eraser: ToolButton
 
 #BRUSH SLIDERS:
 export var brush_size_slider_dir:NodePath
@@ -19,7 +24,10 @@ var brush_density_label: Label;
 
 func _enter_tree():
     button_paint = get_node(button_paint_dir)
-    button_paint.connect("toggled", self, "_set_paint_tool")
+    button_paint.connect("toggled", self, "_toggle_paint_tool")
+    
+    button_eraser = get_node(button_eraser_dir);
+    button_eraser.connect("toggled", self, "_toggle_eraser_tool");
 
     brush_size_slider = get_node(brush_size_slider_dir)
     brush_size_slider.connect("value_changed", self, "_set_brush_size")
@@ -38,10 +46,17 @@ func _exit_tree():
 func _make_local_copy():
     painter._make_local_copy()
 
-func _set_paint_tool(value):
-    if value:
-        painter.current_tool = "_paint_tool"
-        button_paint.set_pressed(true)
+func _toggle_paint_tool(value: bool):
+    if value and painter:
+        emit_signal('tool_changed', 'painter');
+        button_paint.set_pressed(true);
+        button_eraser.set_pressed(false);
+        
+func _toggle_eraser_tool(value: bool):
+    if value and painter:
+        emit_signal('tool_changed', 'eraser');
+        button_paint.set_pressed(false);
+        button_eraser.set_pressed(true);
 
 func _set_brush_size(value):
     brush_size_slider.value = value

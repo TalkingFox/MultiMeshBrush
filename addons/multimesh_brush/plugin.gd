@@ -3,13 +3,10 @@ extends EditorPlugin
 
 const Util = preload("utilities.gd")
 var debug_show_collider:bool = false
-
 var ui_sidebar
 var ui_activate_button
 var brush_cursor
-
 var edit_mode:bool setget _set_edit_mode
-
 var current_tool = "_paint_tool"
 var process_drawing:bool = false
 var brush_size:float = 1
@@ -28,10 +25,8 @@ export(Vector2) var blade_height = Vector2(1, 1.5);
 export(Vector2) var sway_yaw = Vector2(0.0, 10.0);
 export(Vector2) var sway_pitch = Vector2(0.0, 10.0);
 
-
 func handles(obj) -> bool:
     return editable_object;
-
 
 func forward_spatial_gui_input(camera, event) -> bool:
     if !edit_mode:
@@ -40,28 +35,31 @@ func forward_spatial_gui_input(camera, event) -> bool:
     _display_brush()
     _raycast(camera, event)
 
-
     if raycast_hit:
         return _user_input(event) #the returned value blocks or unblocks the default input from godot
     else:
         return false
 
 func _user_input(event) -> bool:
-    if event is InputEventMouseButton and event.button_index == BUTTON_LEFT:
-        if event.is_pressed():
-            process_drawing = true
-            _process_drawing()
-            return true
-        else:
-            process_drawing = false
-            _set_collision()
-            return false
+    if not (event is InputEventMouseButton) or event.button_index != BUTTON_LEFT:
+        return false;
+    
+    if event.is_pressed():
+        process_drawing = true
+        _process_drawing()
+        return true
     else:
+        process_drawing = false
+        _set_collision()
         return false
 
 func _process_drawing():
     while process_drawing:
-        _paint_tool();
+        match current_tool:
+            'painter':
+                _paint_tool();
+            'eraser':
+                _erase_tool();
         yield(get_tree().create_timer(1.0), "timeout")
 
 func _display_brush() -> void:    
@@ -133,15 +131,36 @@ func _paint_tool() -> void:
           rand_range(blade_height.x, blade_height.y),
           deg2rad(rand_range(sway_pitch.x, sway_pitch.y)),
           deg2rad(rand_range(sway_yaw.x, sway_yaw.y)))
-        );    
+        );
+
+func _erase_tool() -> void:
+    print('erase_tool');
+    var multimesh = current_multimesh.multimesh;
+    var cursor_position = hit_position;
+    var cursor_radius = (brush_cursor.mesh as SphereMesh).radius;
     
-    #multimesh.set_instance_transform(mesh_index, Transform(basis, position));
-    #multimesh.set_instance_custom_data(mesh_index, Color(
-    #    rand_range(blade_width.x, blade_width.y),
-    #    rand_range(blade_height.x, blade_height.y),
-    #    deg2rad(rand_range(sway_pitch.x, sway_pitch.y)),
-    #    deg2rad(rand_range(sway_yaw.x, sway_yaw.y)))
-    #);
+    var transforms_to_keep = []
+    for i in multimesh.instance_count:
+        var transform = multimesh.get_instance_transform(i);
+        if !Util.is_point_inside_circle(cursor_position, cursor_radius, transform.origin):
+            transforms_to_keep.append(transform);
+    
+    if transforms_to_keep.size() == multimesh.instance_count:
+        print('To Keep: ' + String(transforms_to_keep.size()));
+        print('Instances Total: ' + String(multimesh.instance_count));
+        return;
+    
+    multimesh.instance_count = transforms_to_keep.size();
+    
+    # reset old instances
+    for i in transforms_to_keep.size():
+        multimesh.set_instance_transform(i, transforms_to_keep[i]);
+        multimesh.set_instance_custom_data(i, Color(
+          rand_range(blade_width.x, blade_width.y),
+          rand_range(blade_height.x, blade_height.y),
+          deg2rad(rand_range(sway_pitch.x, sway_pitch.y)),
+          deg2rad(rand_range(sway_yaw.x, sway_yaw.y)))
+        );
 
 func _set_collision() -> void:
     print('set_collision');
@@ -185,6 +204,10 @@ func _make_local_copy() -> void:
     print('make_local_copy');
     # current_multimesh.mesh = current_multimesh.mesh.duplicate(false)
 
+func _change_tool(selected_tool: String) -> void:
+    print(selected_tool);
+    current_tool = selected_tool;
+
 func _selection_changed() -> void:
     print('selection_changed');
     ui_activate_button._set_ui_sidebar(false)
@@ -210,6 +233,7 @@ func _selection_changed() -> void:
 func _enter_tree() -> void:
     #SETUP THE SIDEBAR:
     ui_sidebar = preload("res://addons/multimesh_brush/scenes/brush_ui.tscn").instance()
+    ui_sidebar.connect('tool_changed', self, '_change_tool');
     add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_SIDE_LEFT, ui_sidebar)
     ui_sidebar.hide()
     ui_sidebar.painter = self

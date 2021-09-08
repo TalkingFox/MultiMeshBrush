@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://addons/multimesh_brush/brush_ui.gd" type="Script" id=1]
 [ext_resource path="res://addons/multimesh_brush/icons/paint-brush.svg" type="Texture" id=2]
+[ext_resource path="res://addons/multimesh_brush/icons/eraser.svg" type="Texture" id=3]
 
 [node name="ui" type="Control"]
 anchor_right = 1.0
@@ -13,7 +14,8 @@ script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
-button_paint_dir = NodePath("MainArea/Tools_1/BtnBrush")
+button_paint_dir = NodePath("MainArea/Tools_1/brush_button")
+button_eraser_dir = NodePath("MainArea/Tools_1/eraser_button")
 brush_size_slider_dir = NodePath("MainArea/Sliders/GridContainer/radius")
 brush_size_label_dir = NodePath("MainArea/Sliders/GridContainer/radius_value")
 brush_density_slider_dir = NodePath("MainArea/Sliders/GridContainer/density")
@@ -35,15 +37,23 @@ margin_bottom = 64.0
 rect_min_size = Vector2( 0, 64 )
 alignment = 1
 
-[node name="BtnBrush" type="ToolButton" parent="MainArea/Tools_1"]
-margin_left = 106.0
-margin_right = 150.0
+[node name="brush_button" type="ToolButton" parent="MainArea/Tools_1"]
+margin_left = 82.0
+margin_right = 126.0
 margin_bottom = 64.0
 rect_min_size = Vector2( 32, 32 )
 hint_tooltip = "Paint multimeshinstances by left clicking on the mesh."
 toggle_mode = true
-pressed = true
 icon = ExtResource( 2 )
+flat = false
+
+[node name="eraser_button" type="ToolButton" parent="MainArea/Tools_1"]
+margin_left = 130.0
+margin_right = 174.0
+margin_bottom = 64.0
+toggle_mode = true
+shortcut_in_tooltip = false
+icon = ExtResource( 3 )
 
 [node name="Sliders" type="VBoxContainer" parent="MainArea"]
 margin_top = 68.0
