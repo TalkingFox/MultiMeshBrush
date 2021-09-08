@@ -13,13 +13,15 @@ var button_eraser: ToolButton
 
 #BRUSH SLIDERS:
 export var brush_size_slider_dir:NodePath
-export var brush_size_label_dir: NodePath
 var brush_size_slider: HSlider;
+
+export var brush_size_label_dir: NodePath
 var brush_size_label: Label;
 
 export var brush_density_slider_dir:NodePath
-export var brush_density_label_dir: NodePath;
 var brush_density_slider: HSlider
+
+export var brush_density_label_dir: NodePath;
 var brush_density_label: Label;
 
 func _enter_tree():
@@ -42,9 +44,6 @@ func _enter_tree():
 
 func _exit_tree():
     pass
-
-func _make_local_copy():
-    painter._make_local_copy()
 
 func _toggle_paint_tool(value: bool):
     if value and painter:
